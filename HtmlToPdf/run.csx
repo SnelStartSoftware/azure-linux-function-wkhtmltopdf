@@ -3,7 +3,7 @@
 using System.Net;
 using Microsoft.WindowsAzure.Storage.Table;
 
-public static async Task<HttpResponseMessage> Run(HttpRequest req, ICollector<Person> outTable, TraceWriter log)
+public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, ICollector<Person> outTable, TraceWriter log)
 {
     dynamic data = await req.Content.ReadAsAsync<object>();
     string name = data?.name;
