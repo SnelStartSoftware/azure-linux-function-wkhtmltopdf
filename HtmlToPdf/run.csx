@@ -10,7 +10,11 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, IColle
 
     if (name == null)
     {
-        return req.CreateResponse(HttpStatusCode.BadRequest, "Please pass a name in the request body");
+        return new HttpResponseMessage
+                       {
+                           StatusCode = HttpStatusCode.BadRequest,
+                           Content = new StringContent("Please pass a name in the request body")
+                       };
     }
 
     outTable.Add(new Person()
@@ -19,7 +23,7 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, IColle
         RowKey = Guid.NewGuid().ToString(),
         Name = name
     });
-    return req.CreateResponse(HttpStatusCode.Created);
+    return new HttpResponseMessage(HttpStatusCode.Created);
 }
 
 public class Person : TableEntity
