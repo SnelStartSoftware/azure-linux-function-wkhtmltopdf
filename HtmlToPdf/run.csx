@@ -3,7 +3,7 @@
 using System.Net;
 using Microsoft.WindowsAzure.Storage.Table;
 
-public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, ICollector<Person> outTable, TraceWriter log)
+public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceWriter log)
 {
     dynamic data = await req.Content.ReadAsAsync<object>();
     string name = data?.name;
@@ -17,16 +17,5 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, IColle
                        };
     }
 
-    outTable.Add(new Person()
-    {
-        PartitionKey = "Functions",
-        RowKey = Guid.NewGuid().ToString(),
-        Name = name
-    });
-    return new HttpResponseMessage(HttpStatusCode.Created);
-}
-
-public class Person : TableEntity
-{
-    public string Name { get; set; }
+    return new HttpResponseMessage(HttpStatusCode.OK);
 }

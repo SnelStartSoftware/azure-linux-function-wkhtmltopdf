@@ -12,13 +12,6 @@
       "type": "http",
       "direction": "out",
       "name": "res"
-    },
-    {
-      "type": "table",
-      "name": "outTable",
-      "tableName": "person",
-      "connection": "",
-      "direction": "out"
     }
   ],
   "disabled": false
