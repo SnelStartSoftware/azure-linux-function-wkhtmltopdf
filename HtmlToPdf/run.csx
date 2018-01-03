@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host;
 
@@ -22,19 +24,50 @@ public static async Task<HttpResponseMessage> Run(HttpRequestMessage req, TraceW
         };
     }
 
-    log.Info($"Requested HTML: {html}");
-    
+    log.Info($"Creating temp files");
+
     var guid = Guid.NewGuid();
     var input = GetTempInputFileLocation(guid, html);
     var output = Path.GetTempPath() + guid + ".pdf";
     
-    // Html to PDF generation here
-    
-    Cleanup(new[] { input, output });
+    byte[] pdf = null;
+    try
+    {
+        var executableLocation = "/home/site/wwwroot/HtmlToPdf/wkhtmltopdf";
+        var wkHtmlToPdf = new Process();
+        wkHtmlToPdf.StartInfo.FileName = executableLocation;
+        wkHtmlToPdf.StartInfo.Arguments = $"--javascript-delay 0 {input} {output}";
+        wkHtmlToPdf.StartInfo.UseShellExecute = false;
 
+        wkHtmlToPdf.Start();
+        wkHtmlToPdf.WaitForExit();
+
+        pdf = File.ReadAllBytes(output);
+    }
+    catch (Exception exception)
+    {
+        log.Error("PDF generation failed due to an unknown error", exception);
+    }
+    finally
+    {
+        log.Info("Cleaning up temp files");
+
+        Cleanup(new[] { input, output });
+    }
+
+    if (pdf == null)
+    {
+        return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+    }
+
+    var response = new HttpResponseMessage();
+    response.Content = new ByteArrayContent(pdf);
+    response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+    response.StatusCode = HttpStatusCode.OK;
+    
     log.Info("Done with function execution");
 
-    return new HttpResponseMessage(HttpStatusCode.OK);
+    return response;
 }
 
 private static string GetTempInputFileLocation(Guid guid, string html)
